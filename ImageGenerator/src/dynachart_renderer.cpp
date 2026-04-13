@@ -469,36 +469,7 @@ cv::Mat DynachartRenderer::drawBoard(const chart_store& chart, const Options& op
     int barLineWidth = std::max(1, static_cast<int>(std::round(options.scale * BAR_LINE_WIDTH)));
     int semiBarLineWidth = std::max(1, static_cast<int>(std::round(options.scale * SEMI_BAR_LINE_WIDTH)));
     double scaledBarHeight = layout.barHeight * options.scale;
-    
-    /*
 
-    // 绘制半小节线（在整个时间轴上连续绘制）
-    if (options.semiBarSpan > 0) {
-        for (double i = options.semiBarSpan; i < pages * options.timeLimit; i += options.semiBarSpan) {
-            int pg = static_cast<int>(i / options.timeLimit);
-            
-            // 边界检查：确保页码在有效范围内
-            if (pg >= pages) continue;
-            
-            //DO NOT static cast i into int!!!!
-
-
-            // 跳过页面边界线位置
-            if (static_cast<int>(i) % options.timeLimit == 0) continue;
-            
-            int x = pageWidth * pg;
-            double y = layout.bottomLineY - scaledBarHeight * (i - pg * options.timeLimit);
-            
-            // 确保线条只绘制到当前页右边界
-            int endX = x + pageWidth;
-            cv::line(board, cv::Point(x, static_cast<int>(y)), 
-                     cv::Point(endX, static_cast<int>(y)),
-                     COLOR_SEMI_BAR_LINE, semiBarLineWidth);
-        }
-
-    }
-
-    */
     // 绘制小节线（跳过页面边界线）
     for (int i = 0; i < pages * options.timeLimit; i += options.barSpan) {
         int pg = i / options.timeLimit;
