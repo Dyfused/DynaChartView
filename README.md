@@ -4,29 +4,34 @@ Dynamite音乐游戏谱面图片生成工具（C++ 实现）
 
 ## 项目结构
 
+下面列出仓库的主要目录与文件（自顶向下）：
+``` 
+DynaChartView/
+├─ CMakeLists.txt                # 顶层 CMake 构建配置
+├─ README.md                     # 项目说明（包含本节）
+├─ ImageGenerator/               # 图像生成子工程（渲染器与资源）
+│  ├─ CMakeLists.txt
+│  ├─ include/
+│  │  └─ dynachart_renderer.h    # 渲染器头文件
+│  └─ src/
+│     └─ dynachart_renderer.cpp  # 渲染器实现
+├─ src/
+│  └─ main.cpp                    # 程序入口、命令行解析与协调逻辑
+├─ include/
+│  └─ version.h                   # 项目版本常量
+├─ ChartStore/                    # 谱面数据结构与解析相关代码
+│  └─ include/
+│     └─ chart_store.h            # ChartStore 类定义
+├─ .gitignore
+├─ .gitattributes
+└─ LICENSE.txt
 ```
-Chartstore_Project/
-├── ChartStore/              # 谱面存储与解析库
-│   ├── include/
-│   │   ├── chart_store.h    # 谱面类定义
-│   │   └── defs.h           # 全局定义
-│   ├── src/
-│   │   └── chart_store.cpp  # 谱面解析实现
-│   └── CMakeLists.txt
-│
-├── ImageGenerator/          # 谱面图片生成库
-│   ├── include/ 
-│   │   └── dynachart_renderer.h
-│   ├── src/ 
-│   │   └── dynachart_renderer.cpp
-│   └── CMakeLists.txt
-│
-├── src/                     # 主程序入口
-│   └── main.cpp
-│
-├── CMakeLists.txt           # 根 CMake 配置
-└── README.md
-```
+
+说明：
+- `ImageGenerator` 包含实际的 Dynachart 风格渲染实现（基于 OpenCV 与 FreeType）。
+- `src/main.cpp` 是命令行工具的入口，负责读取谱面（XML）、初始化渲染器并保存输出图像。
+- `ChartStore/include/chart_store.h` 提供谱面数据的内存结构与解析功能。
+- 顶层 `CMakeLists.txt` 与子目录 `ImageGenerator/CMakeLists.txt` 用于配置与构建（使用 Ninja 生成器，C++14，MSVC /utf-8 编码）。
 
 ---
 
