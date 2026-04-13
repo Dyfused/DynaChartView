@@ -24,6 +24,7 @@
 #include <iomanip>
 #include <chrono>
 #include <vector>
+#include "version.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -65,6 +66,8 @@ int main(int argc, char* argv[]) {
     std::locale::global(std::locale(""));
 
 #endif
+    std::cout << "DynaChartView - Chart Visualization Tool" << std::endl
+        << "Version: " << VERSION << std::endl;
 
     // 默认参数
     DynachartRenderer::Options options;

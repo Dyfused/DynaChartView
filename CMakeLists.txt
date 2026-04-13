@@ -46,11 +46,12 @@ add_subdirectory(ChartStore)
 add_subdirectory(ImageGenerator)
 
 # 主程序
-add_executable(DynaChartView src/main.cpp)
+add_executable(DynaChartView src/main.cpp "include/version.h")
 target_link_libraries(DynaChartView PRIVATE ImageGenerator ChartStore)
 target_include_directories(DynaChartView PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/ChartStore/include
     ${CMAKE_CURRENT_SOURCE_DIR}/ImageGenerator/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
 # UTF-8 编码设置
