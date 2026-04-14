@@ -18,16 +18,16 @@
 // 常量定义 (参考 Python 项目 lib/chart.py Board 类)
 #define SIDE_BORDER -0.4            // 侧面底边界线位置
 #define SIDE_CAP 6.2                // 侧面上边界线位置
-#define SIDE_LIMIT -1.1             // 侧面底边界位置（低于该边界则完全不可见）
-#define SIDE_VISIBLE_LIMIT -1.1     // 侧面底边界位置（低于该边界则完全不可见）
-#define SIDE_VISIBLE_CAP 6.5        // 侧面上边界位置（高于该边界则完全不可见）
+#define SIDE_LIMIT -1.2             // 侧面底边界位置（低于该边界则截断）
+#define SIDE_VISIBLE_LIMIT -1.2     // 侧面底边界位置（低于该边界则完全不可见）
+#define SIDE_VISIBLE_CAP 6.5        // 侧面上边界位置（高于该边界则完全不可见,并截断）
 
 #define FRONT_LEFT_BORDER -0.4      // 正面左边界线位置
 #define FRONT_RIGHT_BORDER 5.4      // 正面右边界线位置
-#define FRONT_LEFT_LIMIT -0.7       // 正面左边界位置（低于该边界则完全不可见）
-#define FRONT_RIGHT_LIMIT 5.7       // 正面右边界位置（高于该边界则完全不可见）
-#define FRONT_VISIBLE_LEFT_LIMIT -0.7   // 正面左边界位置（低于该边界则完全不可见）
-#define FRONT_VISIBLE_RIGHT_LIMIT 5.7   // 正面右边界位置（高于该边界则完全不可见）
+#define FRONT_LEFT_LIMIT -0.8       // 正面左边界位置（低于该边界则截断）
+#define FRONT_RIGHT_LIMIT 5.8       // 正面右边界位置（高于该边界则截断）
+#define FRONT_VISIBLE_LEFT_LIMIT -0.8   // 正面左边界位置（低于该边界则完全不可见）
+#define FRONT_VISIBLE_RIGHT_LIMIT 5.8   // 正面右边界位置（高于该边界则完全不可见）
 
 #define FRONT_BOARD_RATE 2.0
 #define FRONT_NOTE_RATE 2.0
@@ -43,6 +43,8 @@
 #define SPLIT_LINE_WIDTH 30         // 页分割线宽度
 
 #define FONT_SIZE 96
+
+#define HOLD_OPACITY_WEIGHT 0.9 //hold 透明度
 
 /**
  * @brief Dynachart 风格渲染器

@@ -38,8 +38,6 @@ DynachartRenderer::~DynachartRenderer() {
     cleanup();
 }
 
-#define HOLD_OPACITY_WEIGHT 0.9 //hold 透明度
-
 void DynachartRenderer::cleanup() {
     if (ftFace_) {
         FT_Done_Face(ftFace_);
@@ -137,6 +135,39 @@ std::vector<DynachartRenderer::RenderNote> DynachartRenderer::convertNotes(const
             rn.hasSub = false;
             rn.subId = -1;
             
+            // 定义各面的 LIMIT 边界
+            double leftLimit, rightLimit;
+            if (side == -1) {  // LEFT
+                leftLimit = SIDE_LIMIT;
+                rightLimit = SIDE_CAP;
+            } else if (side == 0) {  // FRONT
+                leftLimit = FRONT_LEFT_LIMIT;
+                rightLimit = FRONT_RIGHT_LIMIT;
+            } else {  // RIGHT
+                leftLimit = SIDE_LIMIT;
+                rightLimit = SIDE_CAP;
+            }
+            
+            // 计算 note 的左右边界
+            double noteLeft = rn.pos - rn.width / 2.0;
+            double noteRight = rn.pos + rn.width / 2.0;
+            
+            // 检查是否超出 LIMIT，如果超出则截断宽度
+            if (noteLeft < leftLimit || noteRight > rightLimit) {
+                // 计算截断后的左右边界
+                double clippedLeft = std::max(noteLeft, leftLimit);
+                double clippedRight = std::min(noteRight, rightLimit);
+                
+                // 如果截断后仍有有效宽度，则更新 width 和 pos
+                if (clippedRight > clippedLeft) {
+                    rn.pos = (clippedLeft + clippedRight) / 2.0;  // 新的中心位置
+                    rn.width = clippedRight - clippedLeft;        // 新的宽度
+                } else {
+                    // 完全超出范围，跳过该 note
+                    continue;
+                }
+            }
+            
             switch (n.notetype) {
                 case NORMAL:
                     rn.type = 0;
@@ -176,8 +207,8 @@ std::vector<DynachartRenderer::RenderNote> DynachartRenderer::convertNotes(const
                                 std::cout << "[Warning] HOLD note with ID " << n.id << " on Right side has no corresponding SUB note." << std::endl;
                                 break;
                             }
-                            // 如果找不到 SUB，用 width 计算
-                            rn.end = n.time + n.width;
+                            // 如果找不到 SUB，按0长处理
+                            rn.end = n.time;
                             
                         }
                     } else {
@@ -192,8 +223,8 @@ std::vector<DynachartRenderer::RenderNote> DynachartRenderer::convertNotes(const
 							std::cout << "[Warning] HOLD note with ID " << n.id << " on Right side has no corresponding SUB note." << std::endl;
                             break;
                         }
-                        // 没有 SUB 的 HOLD，用 width 计算
-                        rn.end = n.time + n.width;
+                        // 没有 SUB 的 HOLD，按0长处理
+                        rn.end = n.time;
                     }
                     break;
                 }

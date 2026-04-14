@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(DynaChartView VERSION 1.1.0 LANGUAGES CXX)
+project(DynaChartView VERSION 1.1.2 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -10,6 +10,11 @@ set(CMAKE_CONFIGURATION_TYPES "Debug;Release")
 # 启用静态链接
 set(BUILD_SHARED_LIBS OFF)
 set(OpenCV_STATIC ON)
+
+# 设置版本号
+set(VERSION_H_INPUT "${CMAKE_CURRENT_SOURCE_DIR}/include/version.h.in")
+set(VERSION_H_OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/include/version.h")
+configure_file(${VERSION_H_INPUT} ${VERSION_H_OUTPUT} @ONLY)
 
 # 智能设置 MSVC 运行时库（/MT 或 /MTd）
 set(CompilerFlags
@@ -69,8 +74,9 @@ endif()
 
 # 打印配置信息
 message(STATUS "========================================")
-message(STATUS "Chartstore Static Configuration")
+message(STATUS "DynaChartView Static Configuration")
 message(STATUS "========================================")
+message(STATUS "VERSION:             ${PROJECT_VERSION}")
 message(STATUS "BUILD_SHARED_LIBS:   ${BUILD_SHARED_LIBS}")
 message(STATUS "OpenCV_STATIC:       ${OpenCV_STATIC}")
 message(STATUS "CMAKE_CXX_FLAGS:     ${CMAKE_CXX_FLAGS}")
