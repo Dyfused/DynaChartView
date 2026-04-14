@@ -216,7 +216,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 cmake --build . --config Release
 
 # 5. 运行程序
-.\Release\chartstore.exe input.xml output.png
+.\Release\DynaChartView.exe input.xml output.png
 ```
 
 #### 静态链接 MSVC 运行时
@@ -252,7 +252,7 @@ sudo yum install -y cmake opencv-devel freetype-devel
 
 ```bash
 # 1. 进入项目目录
-cd Chartstore_Project
+cd DynaChartView
 
 # 2. 创建构建目录
 mkdir -p build && cd build
@@ -264,7 +264,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j$(nproc)
 
 # 5. 运行程序
-./chartstore input.xml output.png
+./DynaChartView input.xml output.png
 ```
 
 #### 静态链接 (可选)
@@ -292,7 +292,7 @@ brew install cmake opencv freetype
 
 ```bash
 # 1. 进入项目目录
-cd Chartstore_Project
+cd DynaChartView
 
 # 2. 创建构建目录
 mkdir -p build && cd build
@@ -304,7 +304,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j$(sysctl -n hw.ncpu)
 
 # 5. 运行程序
-./chartstore input.xml output.png
+./DynaChartView input.xml output.png
 ```
 
 ---
