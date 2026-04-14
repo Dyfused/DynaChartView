@@ -25,8 +25,8 @@ const cv::Scalar DynachartRenderer::COLOR_FONT(255, 255, 255, 255);
 // 音符颜色 (BGR 顺序)
 const cv::Scalar DynachartRenderer::NOTE_COLOR_NORMAL(255, 255, 0, 255);      // 青色
 const cv::Scalar DynachartRenderer::NOTE_COLOR_CHAIN(51, 51, 255, 255);       // 红色
-const cv::Scalar DynachartRenderer::NOTE_COLOR_HOLD_BOARD(128, 255, 255, 255); // 黄色
-const cv::Scalar DynachartRenderer::NOTE_COLOR_HOLD_FILL(0, 134, 70, 255);    // 绿色
+const cv::Scalar DynachartRenderer::NOTE_COLOR_HOLD_BOARD(128, 255, 255, 200); // 黄色（半透明）
+const cv::Scalar DynachartRenderer::NOTE_COLOR_HOLD_FILL(0, 134, 70, 180);    // 绿色（半透明）
 
 // 侧边背景颜色 (BGR 顺序)
 const cv::Scalar DynachartRenderer::COLOR_LEFT_SIDE_BG(20, 60, 20, 255);      // 暗绿色 (左侧背景)
@@ -216,7 +216,34 @@ std::vector<DynachartRenderer::RenderNote> DynachartRenderer::convertNotes(const
     // 按开始时间排序
     std::sort(notes.begin(), notes.end(), 
               [](const RenderNote& a, const RenderNote& b) {
-                  return a.start < b.start;
+                  if (a.start != b.start) return a.start < b.start;
+                  // 同一起始时间的 hold 音符，应用碰撞检测逻辑
+                  if (a.type == 2 && b.type == 2) {
+                      // DO NOT CONVERT THE POSITIONS TO INT!!!!!!!!!
+					  double a_left = a.pos - a.width / 2.0; //position 是中心位置，计算左右边界
+                      double a_right = a.pos + a.width / 2.0;
+                      double b_left = b.pos - b.width / 2.0;
+                      double b_right = b.pos + b.width / 2.0;
+                      
+                      // 检查是否一个 hold 头完全盖住另一个 hold 头
+                      bool a_covers_b = (a_left <= b_left && a_right >= b_right);  // a 完全盖住 b
+                      bool b_covers_a = (b_left <= a_left && b_right >= a_right);  // b 完全盖住 a
+					  //std::cout << "Detected coverage.\nA: [" << a_left << ", " << a_right << "], B: [" << b_left << ", " << b_right << "] at time " << a.start << std::endl;
+                      if (a_covers_b || b_covers_a) {
+                          // 完全覆盖情况：按宽度排序
+                          // 宽度大的排在前面（先绘制），宽度小的排在后面（后绘制，显示在上面）
+                          if (a.width != b.width) return a.width > b.width;  // 宽度降序
+                          // 宽度相同，先结束的（end 更小）排在后面（显示在上面）
+                          if (a.end != b.end) return a.end > b.end;  // 结束时间降序
+                          // 起始时间、宽度、结束时间都相同，id 靠后的排在后面（显示在上面）
+                          return a.id < b.id;  // id 升序
+                      } else {
+                          // 非完全覆盖情况（有重叠但不完全覆盖，或完全不重叠）
+                          // 结束时间早的放在结束时间晚的前面（后绘制，在上面）
+                          return a.end > b.end;  // 结束时间降序
+                      }
+                  }
+                  return false;
               });
     
     return notes;
