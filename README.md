@@ -127,7 +127,27 @@ int main() {
 
 ---
 
-## 📦 Compilation Methods
+## 📦 Release packages
+
+This project provides executables for multiple platforms in Github Release.
+
+ubuntu-20.04-amd64.zip - Linux x64 executable (built on Ubuntu 20.04)
+
+ubuntu-20.04-arm64.zip - Linux ARM64 executable (built on Ubuntu 20.04)
+
+macos-arm64.zip - macOS ARM64 executable (built on macOS 14)
+
+windows-x64.zip - Windows x64 executable (built with MSVC 2022)
+
+windows-arm64.zip - Windows ARM64 executable (built with MSVC 2022)
+
+windows-x64-static.zip - Windows x64 static executable (built with MSVC 2022, statically linked runtime)
+
+windows-arm64-static.zip - Windows ARM64 static executable (built with MSVC 2022, statically linked runtime)
+
+---
+
+## 🛠️ Compilation Methods
 
 ### Windows (MSVC)
 
@@ -185,15 +205,17 @@ You may need to define the OPENCV_STATIC macro
 # arm64 (optional)
 .\vcpkg install opencv4:arm64-windows-static freetype:arm64-windows-static
 
-# 2. Configure CMake (x64 example)
+# 2. Integrate vcpkg with Visual Studio (optional but recommended)
+.\vcpkg integrate install
+
+# 3. Configure CMake (x64 example)
 cmake .. -G "Visual Studio 17 2022" -A x64 `   # -A arm64 for arm
   -DCMAKE_TOOLCHAIN_FILE="<Your vcpkg install path>\vcpkg\scripts\buildsystems\vcpkg.cmake" `
-  -DVCPKG_TARGET_TRIPLET=x64-windows-static `
+  -DVCPKG_TARGET_TRIPLET=x64-windows-static `  # arm64-windows-static for arm
   -DOpenCV_STATIC=ON `
-  -DCMAKE_BUILD_TYPE=Release `
-  -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>"
+  -DCMAKE_BUILD_TYPE=Release
 
-# 3. Compile
+# 4. Compile
 cmake --build . --config Release
 ```
 

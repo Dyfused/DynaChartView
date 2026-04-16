@@ -126,8 +126,26 @@ int main() {
 ```
 
 ---
+## 📦 发布安装包
 
-## 📦 编译方法
+本项目在 GitHub Release 中提供多平台可执行文件，各平台文件说明如下：
+
+ubuntu-20.04-amd64.zip - Linux x64 可执行文件（基于 Ubuntu 20.04 编译）
+
+ubuntu-20.04-arm64.zip - Linux ARM64 可执行文件（基于 Ubuntu 20.04 编译）
+
+macos-arm64.zip - macOS ARM64 可执行文件（基于 macOS 14 编译）
+
+windows-x64.zip - Windows x64 可执行文件（使用 MSVC 2022 编译）
+
+windows-arm64.zip - Windows ARM64 可执行文件（使用 MSVC 2022 编译）
+
+windows-x64-static.zip - Windows x64 静态可执行文件（使用 MSVC 2022 编译，无需VC运行时DLL）
+
+windows-arm64-static.zip - Windows ARM64 静态可执行文件（使用 MSVC 2022 编译，无需VC运行时DLL）
+
+---
+## 🛠️ 编译方法
 
 ### Windows 端 (MSVC)
 
@@ -182,15 +200,17 @@ cmake .. -DCMAKE_TOOLCHAIN_FILE="<Your vcpkg install path>\vcpkg\scripts\buildsy
 # arm64 版本（可选）
 .\vcpkg install opencv4:arm64-windows-static freetype:arm64-windows-static
 
-# 2. 配置 CMake（以 x64 为例）
+# 2. 将 vcpkg 集成到 Visual Studio (可选，但推荐)
+.\vcpkg integrate install
+
+# 3. 配置 CMake（以 x64 为例）
 cmake .. -G "Visual Studio 17 2022" -A x64 `  # arm64 架构替换为 -A arm64
   -DCMAKE_TOOLCHAIN_FILE="<你的vcpkg安装路径>\vcpkg\scripts\buildsystems\vcpkg.cmake" `
-  -DVCPKG_TARGET_TRIPLET=x64-windows-static `
+  -DVCPKG_TARGET_TRIPLET=x64-windows-static ` # arm64 架构替换为 arm64-windows-static
   -DOpenCV_STATIC=ON `
-  -DCMAKE_BUILD_TYPE=Release `
-  -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>"
+  -DCMAKE_BUILD_TYPE=Release
 
-# 3. 编译
+# 4. 编译
 cmake --build . --config Release
 ```
 

@@ -44,16 +44,6 @@ target_link_libraries(ImageGenerator PUBLIC
 target_link_libraries(ImageGenerator PUBLIC ${FREETYPE_LIBRARIES})
 target_include_directories(ImageGenerator PUBLIC ${FREETYPE_INCLUDE_DIRS})
 
-# MSVC 静态编译标志
-if(MSVC)
-    # 静态链接运行时
-    foreach(flag_var CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE)
-        if(${flag_var} MATCHES "/MD")
-            string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
-        endif()
-    endforeach()
-endif()
-
 # 安装规则
 install(TARGETS ImageGenerator
     ARCHIVE DESTINATION lib

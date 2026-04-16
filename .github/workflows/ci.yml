@@ -31,32 +31,40 @@ env:
 jobs:
   build-ubuntu:
     name: Ubuntu ${{ matrix.version }} ${{ matrix.arch }} (${{ matrix.compiler }})
-    runs-on: ${{ matrix.use_runner && format('ubuntu-24.04-{0}', matrix.arch) || 'ubuntu-24.04' }}
+    # 核心修改：根据arch动态匹配正确的runner标签
+    runs-on: ${{ matrix.run_on }}
     strategy:
       matrix:
         include:
+          # amd64 原生 runner → 标签 ubuntu-24.04
           - version: "24.04"
             arch: amd64
             compiler: gcc
             use_runner: true
+            run_on: ubuntu-24.04
           - version: "24.04"
             arch: amd64
             compiler: clang
             use_runner: true
+            run_on: ubuntu-24.04
+          # arm64 原生 runner → 标签 ubuntu-24.04-arm
           - version: "24.04"
             arch: arm64
             compiler: gcc
             use_runner: true
+            run_on: ubuntu-24.04-arm
+          # Docker 构建 → 通用标签 ubuntu-24.04
           - version: "20.04"
             arch: amd64
             compiler: gcc
             use_runner: false
+            run_on: ubuntu-24.04
           - version: "20.04"
             arch: arm64
             compiler: gcc
             use_runner: false
+            run_on: ubuntu-24.04
       fail-fast: false
-
     steps:
       - name: Set up QEMU for multi-architecture
         if: ${{ !matrix.use_runner }}
@@ -81,7 +89,7 @@ jobs:
             CC=clang CXX=clang++ cmake .. -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }}
           fi
           make -j$(nproc)
-          cd bin && tar -zcf ../../ubuntu-${{ matrix.version }}-${{ matrix.arch }}-${{ matrix.compiler }}.tar.gz ./*
+          
 
       - name: Build and compile (Docker)
         if: ${{ !matrix.use_runner }}
@@ -103,14 +111,13 @@ jobs:
                 CC=clang CXX=clang++ cmake .. -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }}
               fi
               make -j$(nproc)
-              cd bin && tar -zcf ../../ubuntu-${{ matrix.version }}-${{ matrix.arch }}-${{ matrix.compiler }}.tar.gz ./*
             "
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4  # 修正：补充actions/前缀
         with:
           name: ubuntu-${{ matrix.version }}-${{ matrix.arch }}-${{ matrix.compiler }}
-          path: ./ubuntu-*.tar.gz
+          path: build/bin/
           retention-days: 7
 
   build-fedora:
@@ -143,22 +150,33 @@ jobs:
               mkdir -p build && cd build
               CC=gcc CXX=g++ cmake .. -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }}
               make -j$(nproc)
-              cd bin && tar -zcf ../../fedora-${{ matrix.version }}-${{ matrix.arch }}-gcc.tar.gz ./*
             "
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4  # 修正：补充actions/前缀
         with:
           name: fedora-${{ matrix.version }}-${{ matrix.arch }}-gcc
-          path: ./fedora-*.tar.gz
+          path: build/bin/
           retention-days: 7
 
   build-windows:
     name: Windows ${{ matrix.arch }} ${{ matrix.type }}
-    runs-on: windows-latest
+  # ✅ 直接引用矩阵定义的 runner 标签，无复杂表达式
+    runs-on: ${{ matrix.run_on }}
     strategy:
       matrix:
-        arch: [x64, arm64]
-        type: [dynamic, static]
+        include:
+          - arch: x64
+            type: dynamic
+            run_on: windows-latest
+          - arch: x64
+            type: static
+            run_on: windows-latest
+          - arch: arm64
+            type: dynamic
+            run_on: windows-11-arm
+          - arch: arm64
+            type: static
+            run_on: windows-11-arm
       fail-fast: false
 
     steps:
@@ -192,6 +210,7 @@ jobs:
 
           mkdir build
           cd build
+
           cmake .. -G "Visual Studio 17 2022" -A ${{ matrix.arch }} `
             -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}\vcpkg\scripts\buildsystems/vcpkg.cmake" `
             -DVCPKG_TARGET_TRIPLET="$TRIPLET" `
@@ -235,37 +254,9 @@ jobs:
           mkdir build && cd build
           cmake .. -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }}
           make -j$(sysctl -n hw.ncpu)
-          cd bin && tar -zcf ../../macos-arm64-clang.tar.gz ./*
       - name: Upload artifacts
         uses: actions/upload-artifact@v4  # 修正：补充actions/前缀
         with:
           name: macos-arm64-clang
-          path: ./macos-*.tar.gz
+          path: build/bin/
           retention-days: 7
-
-  release:
-    name: Upload to Release
-    runs-on: ubuntu-24.04
-    needs: [build-ubuntu, build-windows, build-macos]
-    if: startsWith(github.ref, 'refs/tags/')
-    steps:
-      - name: Download all required artifacts
-        uses: actions/download-artifact@v4  # 此行为正确写法（已包含actions/）
-        with:
-          path: ./release-artifacts/
-
-      - name: Upload to GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            ./release-artifacts/ubuntu-20.04-amd64-gcc/*
-            ./release-artifacts/ubuntu-20.04-arm64-gcc/*
-            ./release-artifacts/macos-arm64-clang/*
-            ./release-artifacts/windows-x64-msvc/*
-            ./release-artifacts/windows-arm64-msvc/*
-            ./release-artifacts/windows-x64-static/*
-            ./release-artifacts/windows-arm64-static/*
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

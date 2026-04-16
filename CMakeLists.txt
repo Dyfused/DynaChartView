@@ -9,8 +9,8 @@ set(CMAKE_CONFIGURATION_TYPES "Debug;Release")
 # ==================== 静态编译配置 ====================
 # 启用静态链接
 set(BUILD_SHARED_LIBS OFF)
-if(WIN32)
-    option (OpenCV_STATIC "Use OpenCV as a static library" ON)
+if(MSVC)
+    option (OpenCV_STATIC "Use OpenCV as a static library" OFF)
 endif()
 
 # 设置版本号
@@ -18,26 +18,9 @@ set(VERSION_H_INPUT "${CMAKE_CURRENT_SOURCE_DIR}/include/version.h.in")
 set(VERSION_H_OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/include/version.h")
 configure_file(${VERSION_H_INPUT} ${VERSION_H_OUTPUT} @ONLY)
 
-if(MSVC)
-# 智能设置 MSVC 运行时库（/MT 或 /MTd）
-set(CompilerFlags
-    CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE 
-    CMAKE_CXX_FLAGS_RELWITHDEBINFO CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG 
-    CMAKE_C_FLAGS_RELEASE
-)
-foreach(flag ${CompilerFlags})
-    set(current "${${flag}}")
-    
-    if(current MATCHES "/MDd")
-        string(REPLACE "/MDd" "/MTd" ${flag} "${current}")
-    elseif(current MATCHES "/MD")
-        string(REPLACE "/MD" "/MT" ${flag} "${current}")
-    elseif(flag MATCHES "DEBUG")
-        set(${flag} "/MTd ${current}")
-    else()
-        set(${flag} "/MT ${current}")
-    endif()
-endforeach()
+# /MT manual replacing doesn't work. Use this for static compiling.
+if(MSVC AND OpenCV_STATIC)
+   set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
 # ====================================================
@@ -79,11 +62,12 @@ endif()
 
 # 打印配置信息
 message(STATUS "========================================")
-message(STATUS "DynaChartView Static Configuration")
+message(STATUS "DynaChartView CMake Configuration")
 message(STATUS "========================================")
 message(STATUS "VERSION:             ${PROJECT_VERSION}")
 message(STATUS "BUILD_SHARED_LIBS:   ${BUILD_SHARED_LIBS}")
-if(WIN32)
+if(MSVC)
+# Windows exclusive settings
 message(STATUS "OpenCV_STATIC:       ${OpenCV_STATIC}")
 endif()
 message(STATUS "CMAKE_CXX_FLAGS:     ${CMAKE_CXX_FLAGS}")

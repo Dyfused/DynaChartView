@@ -1,0 +1,86 @@
+name: CI Release
+# 仅Tag触发，不构建
+on:
+  push:
+    tags: [ 'v*' ]
+
+concurrency:
+  group: ${{ github.workspace }}-release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    name: Package & Upload to Release
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code（获取Commit SHA）
+        uses: actions/checkout@v4
+
+      - name: Get tag commit SHA
+        id: get_commit
+        run: |
+          COMMIT_SHA=$(git rev-parse ${{ github.ref }})
+          echo "commit_sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
+
+      # 下载该Commit的所有构建产物
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          commit: ${{ steps.get_commit.outputs.commit_sha }}
+          path: ./release-artifacts/
+
+      # 核心：按你指定的文件名 重命名+打包
+      - name: Package files to required names
+        run: |
+          # 创建发布根目录
+          mkdir -p ./release-pkg/
+
+          # ========== Linux Ubuntu 20.04 ==========
+          cd ./release-artifacts/ubuntu-20.04-amd64-gcc/
+          zip -r ../../release-pkg/ubuntu-20.04-amd64.zip ./*
+          cd ../../
+
+          cd ./release-artifacts/ubuntu-20.04-arm64-gcc/
+          zip -r ../../release-pkg/ubuntu-20.04-arm64.zip ./*
+          cd ../../
+
+          # ========== macOS ARM64 ==========
+          cd ./release-artifacts/macos-arm64-clang/
+          zip -r ../../release-pkg/macos-arm64.zip ./*
+          cd ../../
+
+          # ========== Windows 动态链接(zip) ==========
+          cd ./release-artifacts/windows-x64/
+          zip -r ../../release-pkg/windows-x64.zip ./*
+          cd ../../
+
+          cd ./release-artifacts/windows-arm64/
+          zip -r ../../release-pkg/windows-arm64.zip ./*
+          cd ../../
+
+          # ========== Windows 静态链接（zip） ==========
+          cd ./release-artifacts/windows-x64-static/
+          zip -r ../../release-pkg/windows-x64-static.zip ./*
+          cd ../../
+
+          cd ./release-artifacts/windows-arm64-static/
+          zip -r ../../release-pkg/windows-arm64-static.zip ./*
+          cd ../../
+
+      # 上传到GitHub Release（严格用你指定的文件名）
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ./release-pkg/ubuntu-20.04-amd64.zip
+            ./release-pkg/ubuntu-20.04-arm64.zip
+            ./release-pkg/macos-arm64.zip
+            ./release-pkg/windows-x64.zip
+            ./release-pkg/windows-arm64.zip
+            ./release-pkg/windows-x64-static.zip
+            ./release-pkg/windows-arm64-static.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
