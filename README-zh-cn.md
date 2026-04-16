@@ -173,21 +173,30 @@ cmake .. -DCMAKE_TOOLCHAIN_FILE="<Your vcpkg install path>\vcpkg\scripts\buildsy
 
 **静态链接 MSVC 运行时**
 
-如果使用 vcpkg 静态版本，记得：
-
-安装 -static 版本的库 (opencv4:x64-windows-static freetype:x64-windows-static)
-可能需要定义 OPENCV_STATIC 宏
+若使用 vcpkg 静态版本的库，需执行以下步骤：
 
 ```
-# 1. 安装静态依赖
+# 1. 安装静态依赖（x64/arm64 可选）
+# x64 版本
 .\vcpkg install opencv4:x64-windows-static freetype:x64-windows-static
+# arm64 版本（可选）
+.\vcpkg install opencv4:arm64-windows-static freetype:arm64-windows-static
 
-# 2. 配置 CMake
-cmake .. -DCMAKE_TOOLCHAIN_FILE="<Your vcpkg install path>\vcpkg\scripts\buildsystems\vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>"
+# 2. 配置 CMake（以 x64 为例）
+cmake .. -G "Visual Studio 17 2022" -A x64 `  # arm64 架构替换为 -A arm64
+  -DCMAKE_TOOLCHAIN_FILE="<你的vcpkg安装路径>\vcpkg\scripts\buildsystems\vcpkg.cmake" `
+  -DVCPKG_TARGET_TRIPLET=x64-windows-static `
+  -DOpenCV_STATIC=ON `
+  -DCMAKE_BUILD_TYPE=Release `
+  -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>"
 
 # 3. 编译
 cmake --build . --config Release
 ```
+
+> 注意：
+> 
+> 如需静态链接 MSVC 运行时，建议使用 `-DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>"`（自动为 Release 用 `/MT`、Debug 用 `/MTd`），而非直接设置 `-DCMAKE_EXE_LINKER_FLAGS="/MT"`。
 
 
 
@@ -245,18 +254,17 @@ cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$
 #### 前置要求
 
 ```bash
-# Ubuntu/Debian
+# Ubuntu / Debian / Linux Mint
 sudo apt-get update
 sudo apt-get install -y \
     build-essential \
     cmake \
     libopencv-dev \
-    libfreetype6-dev \
-    git
+    libfreetype6-dev
 
-# CentOS/RHEL
-sudo yum groupinstall "Development Tools"
-sudo yum install -y cmake opencv-devel freetype-devel
+# Fedora / Rocky Linux / RHEL
+sudo dnf groupinstall "Development Tools"
+sudo dnf install -y cmake opencv-devel freetype-devel
 ```
 
 #### 编译步骤
@@ -275,15 +283,20 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j$(nproc)
 
 # 5. 运行程序
-./DynaChartView input.xml output.png
+./bin/DynaChartView input.xml output.png
 ```
 
 #### 静态链接 (可选)
 
+如需构建可在所有 Linux 发行版运行的全静态可执行文件（无依赖）：
+
 ```bash
 cmake .. -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_EXE_LINKER_FLAGS="-static -static-libgcc -static-libstdc++"
+make -j$(nproc)
 ```
+
+> 注意：需确保已安装静态版本的 `opencv-devel` / `libopencv-dev` 库。
 
 ---
 
@@ -397,10 +410,10 @@ export OpenCV_DIR=/usr/lib/x86_64-linux-gnu/cmake/opencv4
 ### 颜色定义
 
 ```cpp
-// 音符颜色
-COLOR_NORMAL  = (100, 200, 255)  // 蓝色
-COLOR_CHAIN   = (100, 255, 100)  // 绿色
-COLOR_HOLD    = (255, 200, 100)  // 橙色
+// 音符颜色（BGRA 格式）
+NOTE_COLOR_NORMAL(255, 255, 0, 255)  // 青色
+NOTE_COLOR_CHAIN(51, 51, 255, 255)   // 红色
+NOTE_COLOR_HOLD_FILL(0, 100, 50, 255)// 绿色
 ```
 
 ### 进度回调支持

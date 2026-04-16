@@ -9,7 +9,9 @@ set(CMAKE_CONFIGURATION_TYPES "Debug;Release")
 # ==================== 静态编译配置 ====================
 # 启用静态链接
 set(BUILD_SHARED_LIBS OFF)
-set(OpenCV_STATIC ON)
+if(WIN32)
+    option (OpenCV_STATIC "Use OpenCV as a static library" ON)
+endif()
 
 # 设置版本号
 set(VERSION_H_INPUT "${CMAKE_CURRENT_SOURCE_DIR}/include/version.h.in")
@@ -81,7 +83,9 @@ message(STATUS "DynaChartView Static Configuration")
 message(STATUS "========================================")
 message(STATUS "VERSION:             ${PROJECT_VERSION}")
 message(STATUS "BUILD_SHARED_LIBS:   ${BUILD_SHARED_LIBS}")
+if(WIN32)
 message(STATUS "OpenCV_STATIC:       ${OpenCV_STATIC}")
+endif()
 message(STATUS "CMAKE_CXX_FLAGS:     ${CMAKE_CXX_FLAGS}")
 message(STATUS "CMAKE_CXX_FLAGS_DEBUG: ${CMAKE_CXX_FLAGS_DEBUG}")
 message(STATUS "CMAKE_CXX_FLAGS_RELEASE: ${CMAKE_CXX_FLAGS_RELEASE}")

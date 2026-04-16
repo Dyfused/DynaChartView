@@ -178,16 +178,28 @@ If using static versions of vcpkg libraries:
 Install static versions of the libraries (opencv4:x64-windows-static freetype:x64-windows-static)
 You may need to define the OPENCV_STATIC macro
 
-```
-# 1. Install static dependencies
+```powershell
+# 1. Install static dependencies (x64/arm64)
+# x64
 .\vcpkg install opencv4:x64-windows-static freetype:x64-windows-static
+# arm64 (optional)
+.\vcpkg install opencv4:arm64-windows-static freetype:arm64-windows-static
 
-# 2. Configure CMake
-cmake .. -DCMAKE_TOOLCHAIN_FILE="<Your vcpkg install path>\vcpkg\scripts\buildsystems\vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>"
+# 2. Configure CMake (x64 example)
+cmake .. -G "Visual Studio 17 2022" -A x64 `   # -A arm64 for arm
+  -DCMAKE_TOOLCHAIN_FILE="<Your vcpkg install path>\vcpkg\scripts\buildsystems\vcpkg.cmake" `
+  -DVCPKG_TARGET_TRIPLET=x64-windows-static `
+  -DOpenCV_STATIC=ON `
+  -DCMAKE_BUILD_TYPE=Release `
+  -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>"
 
 # 3. Compile
 cmake --build . --config Release
 ```
+
+> Note:
+> 
+> To statically link the MSVC runtime, use `-DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>"` (automatically uses `/MT` for Release, `/MTd` for Debug) instead of directly setting `-DCMAKE_EXE_LINKER_FLAGS="/MT"`.
 
 #### Manual Dependency Installation (Not Recommended)
 
@@ -243,45 +255,49 @@ cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$
 #### Prerequisites
 
 ```bash
-# Ubuntu/Debian
+# Ubuntu / Debian / Linux Mint
 sudo apt-get update
 sudo apt-get install -y \
     build-essential \
     cmake \
     libopencv-dev \
-    libfreetype6-dev \
-    git
+    libfreetype6-dev
 
-# CentOS/RHEL
-sudo yum groupinstall "Development Tools"
-sudo yum install -y cmake opencv-devel freetype-devel
+# Fedora / Rocky Linux / RHEL
+sudo dnf groupinstall "Development Tools"
+sudo dnf install -y cmake opencv-devel freetype-devel
 ```
 
 #### Compilation Steps
 
 ```bash
-# 1. Navigate to project directory
+# 1. Go to project directory
 cd DynaChartView
 
 # 2. Create build directory
 mkdir -p build && cd build
 
-# 3. Configure project
+# 3. Configure
 cmake .. -DCMAKE_BUILD_TYPE=Release
 
-# 4. Compile (use all CPU cores)
+# 4. Build (use all CPU cores)
 make -j$(nproc)
 
-# 5. Run the program
-./DynaChartView input.xml output.png
+# 5. Run program
+./bin/DynaChartView input.xml output.png
 ```
 
 #### Static Linking (Optional)
 
+To build a fully static executable that runs on all Linux distributions without dependencies:
+
 ```bash
 cmake .. -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_EXE_LINKER_FLAGS="-static -static-libgcc -static-libstdc++"
+make -j$(nproc)
 ```
+
+> Note: Ensure `opencv-devel` / `libopencv-dev` (static library version) is installed.
 
 ---
 
@@ -395,10 +411,10 @@ export OpenCV_DIR=/usr/lib/x86_64-linux-gnu/cmake/opencv4
 ### Color Definitions
 
 ```cpp
-// Note colors
-COLOR_NORMAL  = (100, 200, 255)  // Blue
-COLOR_CHAIN   = (100, 255, 100)  // Green
-COLOR_HOLD    = (255, 200, 100)  // Orange
+// Note colors (BGRA)
+NOTE_COLOR_NORMAL(255, 255, 0, 255)  // cyan
+NOTE_COLOR_CHAIN(51, 51, 255, 255)  // red
+NOTE_COLOR_HOLD_FILL(0, 100, 50, 255)  // Green
 ```
 
 ### Progress Callback Support
@@ -495,11 +511,3 @@ This project references the following open-source projects:
 ---
 
 **Happy Charting! 🎵**
-
-
-
-
-
-
-
-

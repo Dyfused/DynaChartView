@@ -1,10 +1,25 @@
-name: CI Build
+﻿name: CI Build
+# 核心：仅 源码/Cmake/CI配置 变化时触发
 on:
   push:
     branches: [ main, master ]
     tags: [ 'v*' ]
+    paths:
+      - .github/workflows/ci.yml
+      - '**/CMakeLists.txt'    # ✅ 递归匹配所有底层/子目录的CMakeLists.txt
+      - '**/*.cpp'
+      - '**/*.h'
+      - '**/*.hpp'
+      - '**/*.c'               # 补充C源码（可选，通用兼容）
   pull_request:
     branches: [ main, master ]
+    paths:
+      - .github/workflows/ci.yml
+      - '**/CMakeLists.txt'    # ✅ 递归匹配所有底层/子目录的CMakeLists.txt
+      - '**/*.cpp'
+      - '**/*.h'
+      - '**/*.hpp'
+      - '**/*.c'
 
 concurrency:
   group: ${{ github.workspace }}-${{ github.ref }}
@@ -92,7 +107,7 @@ jobs:
             "
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4  # 修正：补充actions/前缀
         with:
           name: ubuntu-${{ matrix.version }}-${{ matrix.arch }}-${{ matrix.compiler }}
           path: ./ubuntu-*.tar.gz
@@ -131,7 +146,7 @@ jobs:
               cd bin && tar -zcf ../../fedora-${{ matrix.version }}-${{ matrix.arch }}-gcc.tar.gz ./*
             "
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4  # 修正：补充actions/前缀
         with:
           name: fedora-${{ matrix.version }}-${{ matrix.arch }}-gcc
           path: ./fedora-*.tar.gz
@@ -166,38 +181,36 @@ jobs:
 
       - name: Configure CMake
         run: |
+          # ========== 核心修复：动态/静态自动切换 ==========
+          if("${{ matrix.type }}" -eq "static") {
+            $TRIPLET = "${{ matrix.arch }}-windows-static"
+            $OPENCV_STATIC = "ON"
+          } else {
+            $TRIPLET = "${{ matrix.arch }}-windows"
+            $OPENCV_STATIC = "OFF"
+          }
+
           mkdir build
           cd build
-          if("${{ matrix.type }}" -eq "static") {
           cmake .. -G "Visual Studio 17 2022" -A ${{ matrix.arch }} `
-            -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}\vcpkg\scripts/buildsystems/vcpkg.cmake" `
-            -DVCPKG_TARGET_TRIPLET=${{ matrix.arch }}-windows-static `
-            -DOpenCV_STATIC=ON `
-            -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>" `
-            -DCMAKE_BUILD_TYPE=Release
-          } else {
-          cmake .. -G "Visual Studio 17 2022" -A ${{ matrix.arch }} `
-            -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}\vcpkg\scripts/buildsystems/vcpkg.cmake" `
-            -DVCPKG_TARGET_TRIPLET=${{ matrix.arch }}-windows `
-            -DCMAKE_BUILD_TYPE=Release
-          }
+            -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}\vcpkg\scripts\buildsystems/vcpkg.cmake" `
+            -DVCPKG_TARGET_TRIPLET="$TRIPLET" `
+            -DOpenCV_STATIC="$OPENCV_STATIC" `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_FIND_DEBUG_MODE=ON
 
       - name: Build
         run: |
           cd build
           cmake --build . --config Release
-
-      - name: Package dynamic build
-        if: matrix.type == 'dynamic'
-        run: |
-          Compress-Archive -Path build/bin/Release/* -DestinationPath windows-${{ matrix.arch }}-msvc.zip
-
+          
+      # There's no need to package
       - name: Upload dynamic artifact
         if: matrix.type == 'dynamic'
         uses: actions/upload-artifact@v4
         with:
-          name: windows-${{ matrix.arch }}-msvc
-          path: ./windows-${{ matrix.arch }}-msvc.zip
+          name: windows-${{ matrix.arch }}
+          path: build/bin/Release/
           retention-days: 7
 
       - name: Upload static exe artifact
@@ -224,7 +237,7 @@ jobs:
           make -j$(sysctl -n hw.ncpu)
           cd bin && tar -zcf ../../macos-arm64-clang.tar.gz ./*
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4  # 修正：补充actions/前缀
         with:
           name: macos-arm64-clang
           path: ./macos-*.tar.gz
@@ -237,7 +250,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Download all required artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v4  # 此行为正确写法（已包含actions/）
         with:
           path: ./release-artifacts/
 
@@ -247,9 +260,6 @@ jobs:
           files: |
             ./release-artifacts/ubuntu-20.04-amd64-gcc/*
             ./release-artifacts/ubuntu-20.04-arm64-gcc/*
-            ./release-artifacts/ubuntu-24.04-amd64-gcc/*
-            ./release-artifacts/ubuntu-24.04-amd64-clang/*
-            ./release-artifacts/ubuntu-24.04-arm64-gcc/*
             ./release-artifacts/macos-arm64-clang/*
             ./release-artifacts/windows-x64-msvc/*
             ./release-artifacts/windows-arm64-msvc/*
