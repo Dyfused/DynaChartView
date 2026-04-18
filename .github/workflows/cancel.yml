@@ -7,8 +7,7 @@ on:
       - main  # 仅监听 main 分支
 
 # 必需权限
-permissions:
-  actions: write
+permissions: write-all
 
 jobs:
   cancel:
