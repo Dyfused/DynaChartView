@@ -17,4 +17,9 @@ jobs:
       - name: Cancel outdated workflows
         uses: styfle/cancel-workflow-action@0.12.1
         with:
+          # 取消所有工作流（构建/发布/检查等全部终止）
           workflow_id: all
+          # 仅作用于 main 分支
+          only_branches: main
+          # 强制取消：进行中(in_progress) + 等待中(queued) 任务
+          ignore_sha: true
