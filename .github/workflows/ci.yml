@@ -68,6 +68,7 @@ jobs:
   build-ubuntu:
     name: Ubuntu ${{ matrix.version }} ${{ matrix.arch }} (${{ matrix.compiler }})
     runs-on: ${{ matrix.run_on }}
+    timeout-minutes: 20
     needs: check-artifact
     if: |
       always() &&
@@ -143,6 +144,7 @@ jobs:
     name: Fedora ${{ matrix.version }} ${{ matrix.arch }} (gcc)
     runs-on: ubuntu-24.04
     needs: check-artifact
+    timeout-minutes: 20
     if: |
       always() &&
       (github.ref_type != 'tag' || 
@@ -176,6 +178,7 @@ jobs:
     name: Windows ${{ matrix.arch }} ${{ matrix.type }}
     runs-on: ${{ matrix.run_on }}
     needs: check-artifact
+    timeout-minutes: 75
     if: |
       always() &&
       (github.ref_type != 'tag' || 
@@ -262,6 +265,7 @@ jobs:
     name: macOS arm64 (Clang)
     runs-on: macos-14
     needs: check-artifact
+    timeout-minutes: 20
     if: |
       always() &&
       (github.ref_type != 'tag' || 
