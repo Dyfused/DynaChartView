@@ -213,14 +213,29 @@ jobs:
           }
       - name: Install dependencies
         run: .\vcpkg\vcpkg install opencv4 freetype --triplet ${{ steps.triplet.outputs.TRIPLET }}
+      # ✅ 核心：完全按你的 CMakeLists.txt 传参，不手动覆盖运行时库
       - name: Configure CMake
+        shell: pwsh
         run: |
           mkdir build
           cd build
-          cmake .. -G "Visual Studio 17 2022" -A ${{ matrix.arch }} `
-            -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake" `
-            -DVCPKG_TARGET_TRIPLET="${{ steps.triplet.outputs.TRIPLET }}" `
-            -DCMAKE_BUILD_TYPE=Release
+          # 动态编译：OpenCV_STATIC=OFF（匹配CMake默认值）
+          if("${{ matrix.type }}" -eq "dynamic") {
+            cmake .. -G "Visual Studio 17 2022" -A ${{ matrix.arch }} `
+              -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake" `
+              -DVCPKG_TARGET_TRIPLET="${{ steps.triplet.outputs.TRIPLET }}" `
+              -DCMAKE_BUILD_TYPE=Release `
+              -DOpenCV_STATIC=OFF
+          }
+          # 静态编译：OpenCV_STATIC=ON（触发CMake里的/MT静态运行时）
+          else {
+            cmake .. -G "Visual Studio 17 2022" -A ${{ matrix.arch }} `
+              -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}\vcpkg\scripts\buildsystems\vcpkg.cmake" `
+              -DVCPKG_TARGET_TRIPLET="${{ steps.triplet.outputs.TRIPLET }}" `
+              -DCMAKE_BUILD_TYPE=Release `
+              -DOpenCV_STATIC=ON
+          }
+      
       - name: Build
         run: |
           cd build
