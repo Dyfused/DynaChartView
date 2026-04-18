@@ -45,13 +45,25 @@ jobs:
       - name: Get commit SHA
         id: get_commit
         run: echo "sha=$(git rev-parse ${{ github.ref }})" >> $GITHUB_OUTPUT
+      - name: Get Workflow Run ID for Tag Commit
+        id: get_run_id
+        run: |
+          # 查询关联该commit且成功完成的最新workflow run ID
+          RUN_ID=$(gh api repos/${{ github.repository }}/actions/runs \
+            -F event=push \
+            -F head_sha=${{ steps.get_commit.outputs.sha }} \
+            -F status=success \
+            --jq '.workflow_runs[0].id')
+          echo "run_id=${RUN_ID}" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Try download artifacts
         id: download
         continue-on-error: true
         uses: actions/download-artifact@v4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          commit: ${{ steps.get_commit.outputs.sha }}
+          run-id: ${{ steps.get_run_id.outputs.run_id }}  # 替换原无效的commit参数
           path: ./temp
       - name: Check artifact status
         id: check
