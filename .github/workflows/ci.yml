@@ -48,36 +48,25 @@ jobs:
       artifact_exists: ${{ steps.check.outputs.artifact_exists }}
     steps:
       - uses: actions/checkout@v4
-      - name: Get commit SHA
-        id: get_commit
-        run: echo "sha=$(git rev-parse ${{ github.ref }})" >> $GITHUB_OUTPUT
-      - name: Get Workflow Run ID for Tag Commit
-        id: get_run_id
-        run: |
-          # 查询关联该commit且成功完成的最新workflow run ID
-          RUN_ID=$(gh api repos/${{ github.repository }}/actions/runs \
-            -F event=push \
-            -F head_sha=${{ steps.get_commit.outputs.sha }} \
-            -F status=success \
-            --jq '.workflow_runs[0].id')
-          echo "run_id=${RUN_ID}" >> $GITHUB_OUTPUT
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 直接使用当前 workflow 的 run-id（永不 404）
       - name: Try download artifacts
         id: download
         continue-on-error: true
         uses: actions/download-artifact@v4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ steps.get_run_id.outputs.run_id }}  # 替换原无效的commit参数
+          run-id: ${{ github.run_id }}
           path: ./temp
+
+      # 检查是否存在关键产物文件夹
       - name: Check artifact status
         id: check
         run: |
           if [ -d "./temp/ubuntu-20.04-amd64-gcc" ]; then
-            echo "artifact_exists=true" >> $GITHUB_OUTPUT
+            echo "artifact_exists=true" >> "$GITHUB_OUTPUT"
           else
-            echo "artifact_exists=false" >> $GITHUB_OUTPUT
+            echo "artifact_exists=false" >> "$GITHUB_OUTPUT"
           fi
 
   # ==============================================
@@ -318,8 +307,6 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          commit: ${{ steps.get_commit.outputs.sha }}
           path: ./artifacts
       - name: Package to required zip
         run: |
