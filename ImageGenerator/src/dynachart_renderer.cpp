@@ -76,8 +76,8 @@ void DynachartRenderer::setFontPath(const std::string& path) {
 template<typename Map>
 static inline void updateMaxTime(const Map& noteMap, double& maxTime) {
     for (const auto& pair : noteMap) {
-        double noteEnd = (pair.second.notetype == HOLD) ?
-                         (pair.second.time + pair.second.width) : pair.second.time;
+		// HOLD 音符的结束时间由对应的 SUB 音符决定, 而非 HOLD 音符本身的 time + width
+        double noteEnd = pair.second.time;
         if (noteEnd > maxTime) maxTime = noteEnd;
     }
 }
