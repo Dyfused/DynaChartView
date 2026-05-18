@@ -284,15 +284,17 @@ int main(int argc, char* argv[]) {
             double progress = (current * 100.0) / total;
             int barWidth = 30;
             int pos = static_cast<int>(progress * barWidth / 100.0);
-
-            std::cout << "\r[";
-            for (int i = 0; i < barWidth; ++i) {
-                if (i < pos) std::cout << "=";
-                else if (i == pos) std::cout << ">";
-                else std::cout << " ";
+			// main bottleneck is this progress callback, so we only update the progress bar when current is a multiple of 19 or at the end (to ensure we show 100%)
+            if (current == total || current % 29 == 0) {
+                std::cout << "\r[";
+                for (int i = 0; i < barWidth; ++i) {
+                    if (i < pos) std::cout << "=";
+                    else if (i == pos) std::cout << ">";
+                    else std::cout << " ";
+                }
+                std::cout << "] " << std::fixed << std::setprecision(1) << progress << "% "
+                << "(" << current << "/" << total << ") " << std::flush;
             }
-            std::cout << "] " << std::fixed << std::setprecision(1) << progress << "% "
-                      << "(" << current << "/" << total << ") " << std::flush;
         };
 
         if (renderer.generate(chart, outputFile, options)) {

@@ -24,8 +24,16 @@ set(IMAGEGEN_SOURCES
     src/dynachart_renderer_legacy.cpp
 )
 
+
+
 # 创建静态库
 add_library(ImageGenerator STATIC ${IMAGEGEN_SOURCES})
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_definitions(ImageGenerator PUBLIC DYNACHART_DEBUG=1)
+    message(STATUS "DynachartRenderer debug logging: ENABLED")
+else()
+    message(STATUS "DynachartRenderer debug logging: disabled")
+endif()
 
 # 设置包含目录
 target_include_directories(ImageGenerator PUBLIC

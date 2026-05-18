@@ -42,6 +42,17 @@
 
 #define HOLD_OPACITY_WEIGHT 0.9 //hold 透明度
 
+// ============================================================
+// 调试日志宏 — 编译期开关，消除高频 I/O 开销
+// ============================================================
+#ifndef DYNACHART_DEBUG
+#define DYNACHART_DEBUG 0
+#endif
+#define DYNA_LOG_DEBUG(msg)  do { if (DYNACHART_DEBUG) std::cout << msg << std::endl; } while(0)
+#define DYNA_LOG_INFO(msg)  do { std::cout << msg << std::endl; } while(0)
+#define DYNA_LOG_WARN(msg)  do { std::cout << "[Warning] " << msg << std::endl; } while(0)
+#define DYNA_LOG_ERROR(msg)  do { std::cerr << "[ERROR] " << msg << std::endl; } while(0)
+
 /**
  * @brief Dynachart 风格渲染器
  * 
